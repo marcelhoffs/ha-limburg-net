@@ -5,21 +5,16 @@ from datetime import timedelta
 
 from aiolimburgnet import LimburgNetClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_SCAN_INTERVAL_HOURS,
-    DEFAULT_SCAN_INTERVAL_HOURS,
-    DOMAIN,
-)
-from .coordinator import LimburgNetCoordinator
+from .const import CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
+from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LimburgNetConfigEntry) -> bool:
     """Set up Limburg.net from a config entry."""
     session = async_get_clientsession(hass)
     client = LimburgNetClient(session)
@@ -32,21 +27,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LimburgNetConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: LimburgNetConfigEntry) -> None:
     """Reload the entry when its options (e.g. polling interval) change."""
     await hass.config_entries.async_reload(entry.entry_id)

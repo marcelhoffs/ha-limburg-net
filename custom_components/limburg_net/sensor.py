@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -14,10 +13,10 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
 from .const import DOMAIN, get_waste_type_icon
-from .coordinator import LimburgNetCoordinator
+from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 
 
-def _device_info(entry: ConfigEntry) -> DeviceInfo:
+def _device_info(entry: LimburgNetConfigEntry) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
         name=entry.title,
@@ -27,10 +26,12 @@ def _device_info(entry: ConfigEntry) -> DeviceInfo:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: LimburgNetConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Limburg.net sensors, adding new ones as new waste types appear."""
-    coordinator: LimburgNetCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     known_waste_types: set[str] = set()
 
     async_add_entities(
@@ -61,7 +62,10 @@ class LimburgNetSensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity):
     _attr_device_class = SensorDeviceClass.DATE
 
     def __init__(
-        self, coordinator: LimburgNetCoordinator, entry: ConfigEntry, waste_type: str
+        self,
+        coordinator: LimburgNetCoordinator,
+        entry: LimburgNetConfigEntry,
+        waste_type: str,
     ) -> None:
         super().__init__(coordinator)
         self._waste_type = waste_type
@@ -89,7 +93,7 @@ class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity
     def __init__(
         self,
         coordinator: LimburgNetCoordinator,
-        entry: ConfigEntry,
+        entry: LimburgNetConfigEntry,
         day_offset: int,
         name: str,
         unique_suffix: str,

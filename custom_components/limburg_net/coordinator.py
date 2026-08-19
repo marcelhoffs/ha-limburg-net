@@ -26,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 # waste type title -> sorted list of upcoming collection dates
 LimburgNetData = dict[str, list[date]]
 
+type LimburgNetConfigEntry = ConfigEntry[LimburgNetCoordinator]
+
 
 class LimburgNetCoordinator(DataUpdateCoordinator[LimburgNetData]):
     """Fetches and caches upcoming waste collection dates."""
@@ -33,13 +35,14 @@ class LimburgNetCoordinator(DataUpdateCoordinator[LimburgNetData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: LimburgNetConfigEntry,
         client: LimburgNetClient,
         update_interval,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=update_interval,
         )
