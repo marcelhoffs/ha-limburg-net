@@ -19,25 +19,30 @@ MONTHS_AHEAD = 3
 
 API_BASE_URL = "https://limburg.net/api-proxy/public"
 
-# Best-effort icons for the waste types Limburg.net returns. Matched by
-# keyword rather than exact title, since the exact wording of a waste type's
-# title (e.g. "Glas" vs "Glas en flessen") can differ per municipality.
-# Order matters: the first keyword found in the (lowercased) title wins.
-WASTE_TYPE_ICON_KEYWORDS: list[tuple[str, str]] = [
-    ("keukenafval", "mdi:faucet-variant"),
-    ("huisvuil", "mdi:trash-can"),
-    ("restafval", "mdi:trash-can"),
-    ("gft", "mdi:leaf"),
-    ("pmd", "mdi:recycle"),
-    ("papier", "mdi:newspaper"),
-    ("karton", "mdi:newspaper"),
-    ("glas", "mdi:bottle-wine"),
-    ("textiel", "mdi:tshirt-crew"),
-    ("grofvuil", "mdi:sofa"),
-    ("kerstboom", "mdi:pine-tree"),
-    ("snoeiafval", "mdi:tree"),
-    ("tuinafval", "mdi:tree"),
-    ("groenafval", "mdi:tree"),
+# Best-effort icon and translation_key for the waste types Limburg.net
+# returns. Matched by keyword rather than exact title, since the exact
+# wording of a waste type's title (e.g. "Glas" vs "Glas en flessen") can
+# differ per municipality. Order matters: the first keyword found in the
+# (lowercased) title wins.
+#
+# The translation_key drives the entity's localized display name (see
+# strings.json / translations/*.json); when a title matches no keyword,
+# callers fall back to displaying the raw (Dutch) title as-is.
+WASTE_TYPE_KEYWORDS: list[tuple[str, str, str]] = [
+    ("keukenafval", "mdi:faucet-variant", "kitchen_waste"),
+    ("huisvuil", "mdi:trash-can", "residual_waste"),
+    ("restafval", "mdi:trash-can", "residual_waste"),
+    ("gft", "mdi:leaf", "gft"),
+    ("pmd", "mdi:recycle", "pmd"),
+    ("papier", "mdi:newspaper", "paper_cardboard"),
+    ("karton", "mdi:newspaper", "paper_cardboard"),
+    ("glas", "mdi:bottle-wine", "glass"),
+    ("textiel", "mdi:tshirt-crew", "textile"),
+    ("grofvuil", "mdi:sofa", "bulky_waste"),
+    ("kerstboom", "mdi:pine-tree", "christmas_tree"),
+    ("snoeiafval", "mdi:tree", "garden_waste"),
+    ("tuinafval", "mdi:tree", "garden_waste"),
+    ("groenafval", "mdi:tree", "garden_waste"),
 ]
 DEFAULT_ICON = "mdi:trash-can-outline"
 
@@ -45,7 +50,20 @@ DEFAULT_ICON = "mdi:trash-can-outline"
 def get_waste_type_icon(waste_type: str) -> str:
     """Best-effort icon lookup for a waste type title, by keyword."""
     title = waste_type.lower()
-    for keyword, icon in WASTE_TYPE_ICON_KEYWORDS:
+    for keyword, icon, _ in WASTE_TYPE_KEYWORDS:
         if keyword in title:
             return icon
     return DEFAULT_ICON
+
+
+def get_waste_type_translation_key(waste_type: str) -> str | None:
+    """Best-effort translation_key lookup for a waste type title, by keyword.
+
+    Returns None when the title matches no known waste type, in which case
+    callers should fall back to displaying the raw title as-is.
+    """
+    title = waste_type.lower()
+    for keyword, _, translation_key in WASTE_TYPE_KEYWORDS:
+        if keyword in title:
+            return translation_key
+    return None

@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
-from .const import DOMAIN, get_waste_type_icon
+from .const import DOMAIN, get_waste_type_icon, get_waste_type_translation_key
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 
 
@@ -36,8 +36,12 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            LimburgNetDaySensor(coordinator, entry, day_offset=0, name="Today", unique_suffix="today"),
-            LimburgNetDaySensor(coordinator, entry, day_offset=1, name="Tomorrow", unique_suffix="tomorrow"),
+            LimburgNetDaySensor(
+                coordinator, entry, day_offset=0, translation_key="today", unique_suffix="today"
+            ),
+            LimburgNetDaySensor(
+                coordinator, entry, day_offset=1, translation_key="tomorrow", unique_suffix="tomorrow"
+            ),
         ]
     )
 
@@ -69,7 +73,11 @@ class LimburgNetSensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity):
     ) -> None:
         super().__init__(coordinator)
         self._waste_type = waste_type
-        self._attr_name = waste_type
+        translation_key = get_waste_type_translation_key(waste_type)
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = waste_type
         self._attr_unique_id = f"{entry.entry_id}_{slugify(waste_type)}"
         self._attr_icon = get_waste_type_icon(waste_type)
         self._attr_device_info = _device_info(entry)
@@ -95,12 +103,12 @@ class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity
         coordinator: LimburgNetCoordinator,
         entry: LimburgNetConfigEntry,
         day_offset: int,
-        name: str,
+        translation_key: str,
         unique_suffix: str,
     ) -> None:
         super().__init__(coordinator)
         self._day_offset = day_offset
-        self._attr_name = name
+        self._attr_translation_key = translation_key
         self._attr_unique_id = f"{entry.entry_id}_{unique_suffix}"
         self._attr_device_info = _device_info(entry)
 

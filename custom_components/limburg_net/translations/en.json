@@ -30,5 +30,21 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "today": { "name": "Today" },
+      "tomorrow": { "name": "Tomorrow" },
+      "kitchen_waste": { "name": "Kitchen waste" },
+      "residual_waste": { "name": "Residual waste" },
+      "gft": { "name": "GFT (organic waste)" },
+      "pmd": { "name": "PMD (plastic, metal & drink cartons)" },
+      "paper_cardboard": { "name": "Paper & cardboard" },
+      "glass": { "name": "Glass" },
+      "textile": { "name": "Textile" },
+      "bulky_waste": { "name": "Bulky waste" },
+      "christmas_tree": { "name": "Christmas tree" },
+      "garden_waste": { "name": "Garden waste" }
+    }
   }
 }

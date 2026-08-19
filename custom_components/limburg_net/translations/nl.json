@@ -30,5 +30,21 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "today": { "name": "Vandaag" },
+      "tomorrow": { "name": "Morgen" },
+      "kitchen_waste": { "name": "Keukenafval" },
+      "residual_waste": { "name": "Huisvuil" },
+      "gft": { "name": "GFT" },
+      "pmd": { "name": "PMD" },
+      "paper_cardboard": { "name": "Papier & karton" },
+      "glass": { "name": "Glas" },
+      "textile": { "name": "Textiel" },
+      "bulky_waste": { "name": "Grofvuil" },
+      "christmas_tree": { "name": "Kerstboom" },
+      "garden_waste": { "name": "Tuin- en snoeiafval" }
+    }
   }
 }
