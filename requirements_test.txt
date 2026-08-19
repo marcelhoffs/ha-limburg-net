@@ -1,0 +1,2 @@
+-e ./aiolimburgnet
+pytest-homeassistant-custom-component

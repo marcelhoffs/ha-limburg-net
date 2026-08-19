@@ -78,30 +78,11 @@ box.
 - The integration uses the same public, unauthenticated
   `limburg.net/api-proxy/public` endpoints that limburg.net's own website
   uses — no API key is required.
-- Update `manifest.json`'s `codeowners`/`documentation`/`issue_tracker`
-  fields with your own GitHub username/repo before publishing.
-- Update `aiolimburgnet/pyproject.toml` and `LICENSE`'s placeholder
-  author name/email before publishing that package.
-
-## ⚠️ `aiolimburgnet` is not published yet
-
-`manifest.json` declares `"requirements": ["aiolimburgnet==0.1.0"]`, but
-that package **does not exist on PyPI yet** — Home Assistant only installs
-requirements from PyPI (or an explicit URL, which core forbids), so as-is
-the integration will fail to load requirements on a fresh install. Before
-this works end-to-end again:
-
-1. `cd aiolimburgnet`, fill in the placeholder author/URLs in
-   `pyproject.toml` and `LICENSE`.
-2. Build and publish it: `python -m build` then `twine upload dist/*`
-   (needs a PyPI account + API token — this is a step only you can do).
-3. Bump the pinned version in `custom_components/limburg_net/manifest.json`
-   to match whatever you publish.
-
-Until then, to test locally you'd need to `pip install -e ./aiolimburgnet`
-directly into the Python environment Home Assistant runs in.
-
-The library's own test suite (`aiolimburgnet/tests/test_client.py`, using
-`aioresponses` to mock the HTTP API) was written but **not executed** — this
-sandbox has no working Python interpreter. Run `pip install -e ".[test]"`
-and `pytest` yourself before trusting it.
+- `aiolimburgnet` is [published on PyPI](https://pypi.org/project/aiolimburgnet/)
+  and installs automatically as a dependency when Home Assistant sets up
+  this integration — no manual steps needed. New releases are published via
+  the `publish-aiolimburgnet.yml` GitHub Actions workflow (PyPI trusted
+  publishing), triggered by pushing a tag like `aiolimburgnet-v0.1.1`.
+- The library's own test suite (`aiolimburgnet/tests/test_client.py`, using
+  `aioresponses` to mock the HTTP API) was written but **not executed** —
+  run `pip install -e ".[test]"` and `pytest` yourself before trusting it.
