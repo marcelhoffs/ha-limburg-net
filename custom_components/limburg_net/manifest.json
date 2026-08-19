@@ -1,0 +1,12 @@
+{
+  "domain": "limburg_net",
+  "name": "Limburg.net Afvalkalender",
+  "codeowners": ["@marcelhoffs"],
+  "config_flow": true,
+  "documentation": "https://github.com/marcelhoffs/ha-limburg-net",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/marcelhoffs/ha-limburg-net/issues",
+  "requirements": ["aiolimburgnet==0.1.0"],
+  "version": "1.0.0"
+}

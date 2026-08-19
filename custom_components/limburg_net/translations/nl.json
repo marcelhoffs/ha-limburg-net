@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Voeg je adres toe",
+        "description": "Voer je adres in zoals het op de afvalkalender van Limburg.net staat.",
+        "data": {
+          "city_name": "Gemeente",
+          "street_name": "Straatnaam",
+          "house_number": "Huisnummer",
+          "suffix": "Toevoeging (busnummer, optioneel)"
+        }
+      }
+    },
+    "error": {
+      "city_not_found": "Geen overeenkomende gemeente gevonden op Limburg.net.",
+      "street_not_found": "Geen overeenkomende straat gevonden voor deze gemeente.",
+      "cannot_connect": "Kon geen verbinding maken met Limburg.net."
+    },
+    "abort": {
+      "already_configured": "Dit adres is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Limburg.net opties",
+        "data": {
+          "scan_interval_hours": "Ververssnelheid (uren)"
+        }
+      }
+    }
+  }
+}
