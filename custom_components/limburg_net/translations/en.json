@@ -32,6 +32,9 @@
     }
   },
   "entity": {
+    "calendar": {
+      "collections": { "name": "Collections" }
+    },
     "sensor": {
       "today": { "name": "Today" },
       "tomorrow": { "name": "Tomorrow" },

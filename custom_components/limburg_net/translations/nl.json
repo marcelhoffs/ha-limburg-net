@@ -32,6 +32,9 @@
     }
   },
   "entity": {
+    "calendar": {
+      "collections": { "name": "Ophalingen" }
+    },
     "sensor": {
       "today": { "name": "Vandaag" },
       "tomorrow": { "name": "Morgen" },

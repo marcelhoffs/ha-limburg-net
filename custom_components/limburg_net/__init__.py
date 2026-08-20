@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["calendar", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LimburgNetConfigEntry) -> bool:

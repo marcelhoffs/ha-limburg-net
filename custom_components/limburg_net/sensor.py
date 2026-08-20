@@ -5,24 +5,14 @@ from datetime import date, timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
-from .const import DOMAIN, get_waste_type_icon, get_waste_type_translation_key
+from .const import get_waste_type_icon, get_waste_type_translation_key
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
-
-
-def _device_info(entry: LimburgNetConfigEntry) -> DeviceInfo:
-    return DeviceInfo(
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.title,
-        manufacturer="Limburg.net",
-        entry_type=DeviceEntryType.SERVICE,
-    )
+from .entity import device_info
 
 
 async def async_setup_entry(
@@ -80,7 +70,7 @@ class LimburgNetSensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity):
             self._attr_name = waste_type
         self._attr_unique_id = f"{entry.entry_id}_{slugify(waste_type)}"
         self._attr_icon = get_waste_type_icon(waste_type)
-        self._attr_device_info = _device_info(entry)
+        self._attr_device_info = device_info(entry)
 
     @property
     def native_value(self) -> date | None:
@@ -110,7 +100,7 @@ class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity
         self._day_offset = day_offset
         self._attr_translation_key = translation_key
         self._attr_unique_id = f"{entry.entry_id}_{unique_suffix}"
-        self._attr_device_info = _device_info(entry)
+        self._attr_device_info = device_info(entry)
 
     @property
     def _target_date(self) -> date:
