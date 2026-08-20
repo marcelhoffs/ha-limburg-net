@@ -33,7 +33,7 @@
   },
   "entity": {
     "calendar": {
-      "collections": { "name": "Collections" }
+      "collections": { "name": "Waste collection" }
     },
     "sensor": {
       "today": { "name": "Today" },

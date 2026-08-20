@@ -21,8 +21,10 @@ def _entry():
     return SimpleNamespace(entry_id="entry123", title="Test Street 1")
 
 
-def _calendar(data):
-    return LimburgNetCalendar(_FakeCoordinator(data), _entry())
+def _calendar(data, language="en"):
+    calendar = LimburgNetCalendar(_FakeCoordinator(data), _entry())
+    calendar.hass = SimpleNamespace(config=SimpleNamespace(language=language))
+    return calendar
 
 
 def test_event_returns_earliest_upcoming(monkeypatch):
@@ -39,7 +41,7 @@ def test_event_returns_earliest_upcoming(monkeypatch):
     assert event is not None
     assert event.start == date(2026, 8, 24)
     assert event.end == date(2026, 8, 25)
-    assert event.summary == "Huisvuil"
+    assert event.summary == "Residual waste"
     assert event.all_day is True
 
 
@@ -48,6 +50,20 @@ def test_event_ignores_past_dates(monkeypatch):
     calendar = _calendar({"Huisvuil": [date(2026, 8, 24)]})
 
     assert calendar.event is None
+
+
+def test_event_falls_back_to_raw_name_for_unknown_waste_type(monkeypatch):
+    monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 20))
+    calendar = _calendar({"Iets Onbekends": [date(2026, 8, 24)]})
+
+    assert calendar.event.summary == "Iets Onbekends"
+
+
+def test_event_summary_uses_dutch_when_hass_language_is_dutch(monkeypatch):
+    monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 20))
+    calendar = _calendar({"Huisvuil": [date(2026, 8, 24)]}, language="nl-BE")
+
+    assert calendar.event.summary == "Huisvuil"
 
 
 @pytest.mark.asyncio
@@ -65,4 +81,6 @@ async def test_async_get_events_filters_by_range():
         end_date=datetime(2026, 9, 1),
     )
 
-    assert [(e.start, e.summary) for e in events] == [(date(2026, 8, 27), "PMD")]
+    assert [(e.start, e.summary) for e in events] == [
+        (date(2026, 8, 27), "PMD (plastic, metal & drink cartons)")
+    ]

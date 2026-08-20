@@ -10,7 +10,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
-from .const import get_no_collection_text, get_waste_type_icon, get_waste_type_translation_key
+from .const import (
+    get_no_collection_text,
+    get_waste_type_icon,
+    get_waste_type_name,
+    get_waste_type_translation_key,
+)
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 from .entity import device_info
 
@@ -120,7 +125,8 @@ class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity
         types = self._collected_types
         if not types:
             return get_no_collection_text(self.hass.config.language)
-        return ", ".join(types)
+        language = self.hass.config.language
+        return ", ".join(get_waste_type_name(t, language) for t in types)
 
     @property
     def icon(self) -> str:
@@ -133,4 +139,7 @@ class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity
 
     @property
     def extra_state_attributes(self) -> dict[str, list[str]]:
-        return {"waste_types": self._collected_types}
+        language = self.hass.config.language
+        return {
+            "waste_types": [get_waste_type_name(t, language) for t in self._collected_types]
+        }

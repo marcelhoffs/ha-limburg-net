@@ -69,6 +69,34 @@ def get_waste_type_translation_key(waste_type: str) -> str | None:
     return None
 
 
+WASTE_TYPE_NAMES: dict[str, dict[str, str]] = {
+    "kitchen_waste": {"en": "Kitchen waste", "nl": "Keukenafval"},
+    "residual_waste": {"en": "Residual waste", "nl": "Huisvuil"},
+    "gft": {"en": "GFT (organic waste)", "nl": "GFT"},
+    "pmd": {"en": "PMD (plastic, metal & drink cartons)", "nl": "PMD"},
+    "paper_cardboard": {"en": "Paper & cardboard", "nl": "Papier & karton"},
+    "glass": {"en": "Glass", "nl": "Glas"},
+    "textile": {"en": "Textile", "nl": "Textiel"},
+    "bulky_waste": {"en": "Bulky waste", "nl": "Grofvuil"},
+    "christmas_tree": {"en": "Christmas tree", "nl": "Kerstboom"},
+    "garden_waste": {"en": "Garden waste", "nl": "Tuin- en snoeiafval"},
+}
+
+
+def get_waste_type_name(waste_type: str, language: str) -> str:
+    """Localized display name for a waste type title.
+
+    Falls back to the raw (Dutch) title when it matches no known waste type,
+    or when no translation exists for the requested language.
+    """
+    translation_key = get_waste_type_translation_key(waste_type)
+    if translation_key is None:
+        return waste_type
+    names = WASTE_TYPE_NAMES.get(translation_key, {})
+    lang = language.split("-")[0].lower()
+    return names.get(lang, names.get("en", waste_type))
+
+
 NO_COLLECTION_TEXT = {
     "nl": "Geen afvalophaling",
 }

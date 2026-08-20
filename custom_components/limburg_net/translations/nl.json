@@ -33,7 +33,7 @@
   },
   "entity": {
     "calendar": {
-      "collections": { "name": "Ophalingen" }
+      "collections": { "name": "Afvalophaling" }
     },
     "sensor": {
       "today": { "name": "Vandaag" },

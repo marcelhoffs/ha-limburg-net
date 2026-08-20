@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from .const import get_waste_type_name
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 from .entity import device_info
 
@@ -36,11 +37,12 @@ class LimburgNetCalendar(CoordinatorEntity[LimburgNetCoordinator], CalendarEntit
         self._attr_device_info = device_info(entry)
 
     def _events(self) -> list[CalendarEvent]:
+        language = self.hass.config.language
         events = [
             CalendarEvent(
                 start=collection_date,
                 end=collection_date + dt.timedelta(days=1),
-                summary=waste_type,
+                summary=get_waste_type_name(waste_type, language),
             )
             for waste_type, dates in self.coordinator.data.items()
             for collection_date in dates
