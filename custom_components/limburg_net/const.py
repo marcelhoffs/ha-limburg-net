@@ -67,3 +67,14 @@ def get_waste_type_translation_key(waste_type: str) -> str | None:
         if keyword in title:
             return translation_key
     return None
+
+
+NO_COLLECTION_TEXT = {
+    "nl": "Geen afvalophaling",
+}
+DEFAULT_NO_COLLECTION_TEXT = "No waste collection"
+
+
+def get_no_collection_text(language: str) -> str:
+    """Localized placeholder for the today/tomorrow sensors when nothing is collected."""
+    return NO_COLLECTION_TEXT.get(language.split("-")[0].lower(), DEFAULT_NO_COLLECTION_TEXT)
