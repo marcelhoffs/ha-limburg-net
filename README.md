@@ -10,10 +10,8 @@ Home Assistant UI when you install and set up the integration.
 This repo contains two packages:
 
 - **`aiolimburgnet/`** — a standalone, HA-independent async Python library
-  (`aiohttp`-based) that talks to the Limburg.net API. Home Assistant core
-  requires all API-specific code to live in a published third-party library
-  rather than be embedded in the integration itself, so this is what the
-  integration depends on.
+  (`aiohttp`-based) that talks to the Limburg.net API, published on PyPI so
+  it can be versioned and tested independently of the integration.
 - **`custom_components/limburg_net/`** — the Home Assistant integration
   itself: config flow, coordinator, sensors. It depends on `aiolimburgnet`
   via `manifest.json`'s `requirements`.
