@@ -82,5 +82,5 @@ async def test_async_get_events_filters_by_range():
     )
 
     assert [(e.start, e.summary) for e in events] == [
-        (date(2026, 8, 27), "PMD (plastic, metal & drink cartons)")
+        (date(2026, 8, 27), "PMD")
     ]

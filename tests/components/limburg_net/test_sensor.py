@@ -95,7 +95,7 @@ def test_day_sensor_lists_types_for_target_date(monkeypatch: pytest.MonkeyPatch)
         {"PMD": [date(2026, 8, 20)], "Huisvuil": [date(2026, 8, 20)]}, day_offset=0
     )
 
-    assert sensor.native_value == "Residual waste, PMD (plastic, metal & drink cartons)"
+    assert sensor.native_value == "Residual waste, PMD"
 
 
 def test_day_sensor_lists_types_in_dutch_when_hass_language_is_dutch(
@@ -115,7 +115,7 @@ def test_day_sensor_uses_day_offset_for_tomorrow(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 20))
     sensor = _day_sensor({"PMD": [date(2026, 8, 21)]}, day_offset=1)
 
-    assert sensor.native_value == "PMD (plastic, metal & drink cartons)"
+    assert sensor.native_value == "PMD"
 
 
 def test_day_sensor_shows_english_placeholder_when_no_collection(
@@ -167,7 +167,7 @@ def test_day_sensor_extra_state_attributes(monkeypatch: pytest.MonkeyPatch):
     )
 
     assert sensor.extra_state_attributes == {
-        "waste_types": ["Residual waste", "PMD (plastic, metal & drink cartons)"]
+        "waste_types": ["Residual waste", "PMD"]
     }
 
 

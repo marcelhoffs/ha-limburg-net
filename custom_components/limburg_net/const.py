@@ -72,8 +72,8 @@ def get_waste_type_translation_key(waste_type: str) -> str | None:
 WASTE_TYPE_NAMES: dict[str, dict[str, str]] = {
     "kitchen_waste": {"en": "Kitchen waste", "nl": "Keukenafval"},
     "residual_waste": {"en": "Residual waste", "nl": "Huisvuil"},
-    "gft": {"en": "GFT (organic waste)", "nl": "GFT"},
-    "pmd": {"en": "PMD (plastic, metal & drink cartons)", "nl": "PMD"},
+    "gft": {"en": "Organic waste", "nl": "GFT"},
+    "pmd": {"en": "PMD", "nl": "PMD"},
     "paper_cardboard": {"en": "Paper & cardboard", "nl": "Papier & karton"},
     "glass": {"en": "Glass", "nl": "Glas"},
     "textile": {"en": "Textile", "nl": "Textiel"},
