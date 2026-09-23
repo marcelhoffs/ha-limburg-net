@@ -11,16 +11,25 @@ class LimburgNetConnectionError(LimburgNetError):
 
 
 class CityNotFoundError(LimburgNetError):
-    """Raised when no city matches the given search query."""
+    """Raised when no single city matches the given search query.
 
-    def __init__(self, query: str) -> None:
+    `candidates` lists the names the API returned when the query was
+    ambiguous (several prefix matches, none exact); empty when nothing matched.
+    """
+
+    def __init__(self, query: str, candidates: list[str] | None = None) -> None:
         super().__init__(f"No city found matching {query!r}")
         self.query = query
+        self.candidates = candidates or []
 
 
 class StreetNotFoundError(LimburgNetError):
-    """Raised when no street matches the given search query."""
+    """Raised when no single street matches the given search query.
 
-    def __init__(self, query: str) -> None:
+    `candidates` works as for CityNotFoundError.
+    """
+
+    def __init__(self, query: str, candidates: list[str] | None = None) -> None:
         super().__init__(f"No street found matching {query!r}")
         self.query = query
+        self.candidates = candidates or []

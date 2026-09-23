@@ -62,6 +62,8 @@ async def test_async_update_data_filters_sorts_and_dedupes(
         "PMD": [date(2026, 8, 20), date(2026, 8, 27)],
         "Huisvuil": [date(2026, 8, 24)],
     }
+    # Months are counted from HA's local date, not the system clock's.
+    assert client.get_upcoming_events.await_args.kwargs["from_date"] == date(2026, 8, 20)
 
 
 async def test_async_update_data_wraps_client_errors(hass: HomeAssistant) -> None:

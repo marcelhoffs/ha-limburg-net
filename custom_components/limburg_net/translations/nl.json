@@ -14,8 +14,12 @@
     },
     "error": {
       "city_not_found": "Geen overeenkomende gemeente gevonden op Limburg.net.",
+      "city_ambiguous": "Meerdere gemeenten komen overeen. Vul de volledige naam in, bv. een van: {suggestions}",
       "street_not_found": "Geen overeenkomende straat gevonden voor deze gemeente.",
-      "cannot_connect": "Kon geen verbinding maken met Limburg.net."
+      "street_ambiguous": "Meerdere straten komen overeen. Vul de volledige naam in, bv. een van: {suggestions}",
+      "house_number_required": "Vul een huisnummer in.",
+      "cannot_connect": "Kon geen verbinding maken met Limburg.net.",
+      "unknown": "Onverwachte fout. Bekijk de Home Assistant-logs."
     },
     "abort": {
       "already_configured": "Dit adres is al geconfigureerd."

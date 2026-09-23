@@ -1,4 +1,6 @@
 """aiolimburgnet: async Python client for the public Limburg.net waste collection calendar API."""
+from importlib.metadata import version
+
 from .client import LimburgNetClient
 from .exceptions import (
     CityNotFoundError,
@@ -8,7 +10,7 @@ from .exceptions import (
 )
 from .models import City, CollectionEvent, Street
 
-__version__ = "0.1.0"
+__version__ = version("aiolimburgnet")
 
 __all__ = [
     "City",

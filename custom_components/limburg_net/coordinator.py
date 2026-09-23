@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 from aiolimburgnet import City, LimburgNetClient, LimburgNetError, Street
 
@@ -37,7 +37,7 @@ class LimburgNetCoordinator(DataUpdateCoordinator[LimburgNetData]):
         hass: HomeAssistant,
         entry: LimburgNetConfigEntry,
         client: LimburgNetClient,
-        update_interval,
+        update_interval: timedelta,
     ) -> None:
         super().__init__(
             hass,
@@ -53,24 +53,23 @@ class LimburgNetCoordinator(DataUpdateCoordinator[LimburgNetData]):
         self._suffix = entry.data.get(CONF_SUFFIX, "")
 
     async def _async_update_data(self) -> LimburgNetData:
+        today = dt_util.now().date()
         try:
             events = await self._client.get_upcoming_events(
-                self._city, self._street, self._house_number, self._suffix
+                self._city,
+                self._street,
+                self._house_number,
+                self._suffix,
+                from_date=today,
             )
         except LimburgNetError as err:
             raise UpdateFailed(f"Error communicating with Limburg.net: {err}") from err
 
-        today = dt_util.now().date()
-        result: LimburgNetData = {}
-
+        # Past dates are dropped here to keep the data small; entities still
+        # re-filter against the clock, since data can be up to a scan interval old.
+        by_type: dict[str, set[date]] = {}
         for event in events:
-            if event.date < today:
-                continue
-            dates = result.setdefault(event.waste_type, [])
-            if event.date not in dates:
-                dates.append(event.date)
+            if event.date >= today:
+                by_type.setdefault(event.waste_type, set()).add(event.date)
 
-        for dates in result.values():
-            dates.sort()
-
-        return result
+        return {waste_type: sorted(dates) for waste_type, dates in by_type.items()}

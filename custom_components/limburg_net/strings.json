@@ -14,8 +14,12 @@
     },
     "error": {
       "city_not_found": "No matching city was found on Limburg.net.",
+      "city_ambiguous": "Several cities match. Enter the full name, e.g. one of: {suggestions}",
       "street_not_found": "No matching street was found for this city.",
-      "cannot_connect": "Could not reach the Limburg.net service."
+      "street_ambiguous": "Several streets match. Enter the full name, e.g. one of: {suggestions}",
+      "house_number_required": "Enter a house number.",
+      "cannot_connect": "Could not reach the Limburg.net service.",
+      "unknown": "Unexpected error. Check the Home Assistant logs."
     },
     "abort": {
       "already_configured": "This address is already configured."

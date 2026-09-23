@@ -12,7 +12,12 @@ from aiolimburgnet import (
     StreetNotFoundError,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -32,6 +37,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Cap the "did you mean" list so a short prefix doesn't flood the form.
+MAX_SUGGESTIONS = 10
+
 STEP_USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CITY_NAME): str,
@@ -49,54 +57,49 @@ class LimburgNetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> Any:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            client = LimburgNetClient(session)
+            client = LimburgNetClient(async_get_clientsession(self.hass))
 
             city_name = user_input[CONF_CITY_NAME].strip()
             street_name = user_input[CONF_STREET_NAME].strip()
             house_number = user_input[CONF_HOUSE_NUMBER].strip()
             suffix = user_input[CONF_SUFFIX].strip()
 
-            city = None
-            street = None
-
             try:
                 city = await client.find_city(city_name)
-            except CityNotFoundError:
-                errors[CONF_CITY_NAME] = "city_not_found"
+                street = await client.find_street(city, street_name)
+            except CityNotFoundError as err:
+                errors[CONF_CITY_NAME] = _not_found_error("city", err.candidates, placeholders)
+            except StreetNotFoundError as err:
+                errors[CONF_STREET_NAME] = _not_found_error("street", err.candidates, placeholders)
             except LimburgNetConnectionError:
                 errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001 - surface anything else as a form error
+                _LOGGER.exception("Unexpected error while validating the address")
+                errors["base"] = "unknown"
+            else:
+                if not house_number:
+                    errors[CONF_HOUSE_NUMBER] = "house_number_required"
+                else:
+                    unique_id = f"{city.nis_code}_{street.id}_{house_number}_{suffix}"
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
 
-            if city is not None and not errors:
-                try:
-                    street = await client.find_street(city, street_name)
-                except StreetNotFoundError:
-                    errors[CONF_STREET_NAME] = "street_not_found"
-                except LimburgNetConnectionError:
-                    errors["base"] = "cannot_connect"
-
-            if city is not None and street is not None and not errors:
-                unique_id = f"{city.nis_code}_{street.id}_{house_number}_{suffix}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-                title = f"{street.name} {house_number}, {city.name}".strip()
-
-                return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_CITY_NAME: city.name,
-                        CONF_CITY_ID: city.nis_code,
-                        CONF_STREET_NAME: street.name,
-                        CONF_STREET_ID: street.id,
-                        CONF_HOUSE_NUMBER: house_number,
-                        CONF_SUFFIX: suffix,
-                    },
-                )
+                    return self.async_create_entry(
+                        title=f"{street.name} {house_number}, {city.name}",
+                        data={
+                            CONF_CITY_NAME: city.name,
+                            CONF_CITY_ID: city.nis_code,
+                            CONF_STREET_NAME: street.name,
+                            CONF_STREET_ID: street.id,
+                            CONF_HOUSE_NUMBER: house_number,
+                            CONF_SUFFIX: suffix,
+                        },
+                    )
         else:
             user_input = {}
 
@@ -104,27 +107,33 @@ class LimburgNetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(STEP_USER_SCHEMA, user_input),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "LimburgNetOptionsFlow":
-        return LimburgNetOptionsFlow(config_entry)
+    def async_get_options_flow(config_entry: ConfigEntry) -> LimburgNetOptionsFlow:
+        return LimburgNetOptionsFlow()
+
+
+def _not_found_error(kind: str, candidates: list[str], placeholders: dict[str, str]) -> str:
+    """Return the error key for a failed lookup, filling in suggestions if ambiguous."""
+    if not candidates:
+        return f"{kind}_not_found"
+    placeholders["suggestions"] = ", ".join(candidates[:MAX_SUGGESTIONS])
+    return f"{kind}_ambiguous"
 
 
 class LimburgNetOptionsFlow(OptionsFlow):
     """Let the user tweak the polling interval after setup, via the UI."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        self._config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> Any:
+    ) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        current = self._config_entry.options.get(
+        current = self.config_entry.options.get(
             CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
         )
         schema = vol.Schema(

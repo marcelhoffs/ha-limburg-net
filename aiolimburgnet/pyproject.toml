@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiolimburgnet"
-version = "0.1.0"
+version = "0.2.0"
 description = "Async Python client for the public Limburg.net waste collection calendar API"
 readme = "README.md"
 license = "MIT"
@@ -31,6 +31,8 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest>=8.0",
+    # aioresponses 0.7.9 breaks on aiohttp 3.13+ (ClientResponse signature); drop once it catches up
+    "aiohttp<3.13",
     "pytest-asyncio>=0.24",
     "aioresponses>=0.7",
 ]

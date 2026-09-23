@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
@@ -23,7 +23,7 @@ from .entity import device_info
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LimburgNetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Limburg.net sensors, adding new ones as new waste types appear."""
     coordinator = entry.runtime_data
@@ -78,14 +78,19 @@ class LimburgNetSensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity):
         self._attr_device_info = device_info(entry)
 
     @property
+    def _upcoming_dates(self) -> list[date]:
+        # Data can be up to a scan interval old, so drop days that have passed.
+        today = dt_util.now().date()
+        return [d for d in self.coordinator.data.get(self._waste_type, []) if d >= today]
+
+    @property
     def native_value(self) -> date | None:
-        dates = self.coordinator.data.get(self._waste_type)
+        dates = self._upcoming_dates
         return dates[0] if dates else None
 
     @property
     def extra_state_attributes(self) -> dict[str, list[str]]:
-        dates = self.coordinator.data.get(self._waste_type, [])
-        return {"upcoming_dates": [d.isoformat() for d in dates]}
+        return {"upcoming_dates": [d.isoformat() for d in self._upcoming_dates]}
 
 
 class LimburgNetDaySensor(CoordinatorEntity[LimburgNetCoordinator], SensorEntity):

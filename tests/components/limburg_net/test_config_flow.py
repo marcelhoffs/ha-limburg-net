@@ -164,6 +164,75 @@ async def test_form_street_lookup_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_ambiguous_street_lists_suggestions(hass: HomeAssistant) -> None:
+    """A partial street name matching several streets asks for the full name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with _patch_client(
+        find_street=AsyncMock(
+            side_effect=StreetNotFoundError("Kerk", ["Kerkeweg", "Kerkplein", "Kerkstraat"])
+        )
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_STREET_NAME: "street_ambiguous"}
+    assert result["description_placeholders"] == {
+        "suggestions": "Kerkeweg, Kerkplein, Kerkstraat"
+    }
+
+
+async def test_form_ambiguous_city_lists_suggestions(hass: HomeAssistant) -> None:
+    """A partial city name matching several cities asks for the full name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with _patch_client(
+        find_city=AsyncMock(side_effect=CityNotFoundError("Ha", ["Halen", "Hasselt"]))
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["errors"] == {CONF_CITY_NAME: "city_ambiguous"}
+    assert result["description_placeholders"] == {"suggestions": "Halen, Hasselt"}
+
+
+async def test_form_unexpected_error_shows_unknown(hass: HomeAssistant) -> None:
+    """Anything the client doesn't wrap surfaces as a form error, not a crash."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with _patch_client(find_city=AsyncMock(side_effect=RuntimeError("boom"))):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_form_blank_house_number_rejected(hass: HomeAssistant) -> None:
+    """A whitespace-only house number doesn't create an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with _patch_client():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**USER_INPUT, CONF_HOUSE_NUMBER: "  "}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOUSE_NUMBER: "house_number_required"}
+
+
 async def test_form_already_configured_aborts(hass: HomeAssistant) -> None:
     """The same address cannot be configured twice."""
     existing_entry = MockConfigEntry(

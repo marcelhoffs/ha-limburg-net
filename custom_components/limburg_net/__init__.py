@@ -1,17 +1,19 @@
 """The Limburg.net Afvalkalender integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from aiolimburgnet import LimburgNetClient
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_change
 
 from .const import CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
 from .coordinator import LimburgNetConfigEntry, LimburgNetCoordinator
 
-PLATFORMS = ["calendar", "sensor"]
+PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LimburgNetConfigEntry) -> bool:
@@ -29,6 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LimburgNetConfigEntry) -
 
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    @callback
+    def _async_midnight(_now: datetime) -> None:
+        # Entities derive today/tomorrow and "next date" from the clock, but
+        # only re-render on coordinator updates; nudge them when the day rolls.
+        coordinator.async_update_listeners()
+
+    entry.async_on_unload(
+        async_track_time_change(hass, _async_midnight, hour=0, minute=0, second=0)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -84,3 +84,26 @@ async def test_async_get_events_filters_by_range():
     assert [(e.start, e.summary) for e in events] == [
         (date(2026, 8, 27), "PMD")
     ]
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "expected"),
+    [
+        # calendar trigger window straddling midnight of the collection day
+        (datetime(2026, 8, 26, 23, 55), datetime(2026, 8, 27, 0, 10), [date(2026, 8, 27)]),
+        # calendar.get_events with start=now, duration=24h
+        (datetime(2026, 8, 26, 14, 0), datetime(2026, 8, 27, 14, 0), [date(2026, 8, 27)]),
+        # window inside the collection day
+        (datetime(2026, 8, 27, 9, 0), datetime(2026, 8, 27, 10, 0), [date(2026, 8, 27)]),
+        # window ending exactly when the event starts: no overlap
+        (datetime(2026, 8, 26, 0, 0), datetime(2026, 8, 27, 0, 0), []),
+        # window starting exactly when the event ends: no overlap
+        (datetime(2026, 8, 28, 0, 0), datetime(2026, 8, 29, 0, 0), []),
+    ],
+)
+async def test_async_get_events_uses_datetime_overlap(start, end, expected):
+    calendar = _calendar({"PMD": [date(2026, 8, 27)]})
+
+    events = await calendar.async_get_events(hass=None, start_date=start, end_date=end)
+
+    assert [e.start for e in events] == expected

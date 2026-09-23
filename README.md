@@ -28,7 +28,12 @@ This repo contains two packages:
   `upcoming_dates` attribute lists all known future dates for that type.
 - Two extra sensors, `Today` and `Tomorrow`, show which waste type(s) (if any)
   are collected on that day — handy for a "put the bins out" automation or
-  dashboard card, without having to compare dates yourself.
+  dashboard card, without having to compare dates yourself. They roll over at
+  midnight. Their state is display text in your Home Assistant language, so in
+  automations test the `waste_types` attribute instead (e.g.
+  `{{ state_attr('sensor.x_tomorrow', 'waste_types') | length > 0 }}`).
+- A calendar entity with every collection as an all-day event, usable with
+  calendar triggers.
 - An Options flow lets you change the polling interval later, also from the UI.
 - Data refreshes automatically (every 12 hours by default) via a
   `DataUpdateCoordinator`.
@@ -56,7 +61,8 @@ This repo contains two packages:
    bus number) exactly as they appear on the official Limburg.net calendar.
 4. Submit — the integration looks up your city and street on Limburg.net and,
    once matched, creates one device with a sensor per waste type collected at
-   your address.
+   your address. A partial name is accepted only when it matches a single
+   city/street; otherwise the form lists the candidates to choose from.
 
 To change how often it polls, open the integration's entry and click
 **Configure**.
@@ -81,6 +87,20 @@ box.
   this integration — no manual steps needed. New releases are published via
   the `publish-aiolimburgnet.yml` GitHub Actions workflow (PyPI trusted
   publishing), triggered by pushing a tag like `aiolimburgnet-v0.1.1`.
-- The library's own test suite (`aiolimburgnet/tests/test_client.py`, using
-  `aioresponses` to mock the HTTP API) was written but **not executed** —
-  run `pip install -e ".[test]"` and `pytest` yourself before trusting it.
+- Requires Home Assistant 2025.2 or newer.
+
+## Development
+
+Both test suites run in CI (`.github/workflows/tests.yml`). Locally:
+
+```bash
+# library (pins aiohttp<3.13 for aioresponses)
+pip install -e "aiolimburgnet[test]" && pytest aiolimburgnet
+
+# integration
+pip install -r requirements_test.txt && pytest
+```
+
+Releasing a library change: bump `aiolimburgnet/pyproject.toml`, push a
+`aiolimburgnet-vX.Y.Z` tag, and only then release an integration version whose
+`manifest.json` requires it.

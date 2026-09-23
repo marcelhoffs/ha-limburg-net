@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 import aiohttp
 import pytest
@@ -105,3 +106,112 @@ async def test_connection_error_is_wrapped() -> None:
         async with aiohttp.ClientSession() as session:
             with pytest.raises(LimburgNetConnectionError):
                 await LimburgNetClient(session).find_city("Genk")
+
+
+CITY_SEARCH = re.compile(rf"{re.escape(API_BASE_URL)}/afval-kalender/gemeenten/search.*")
+STREET_SEARCH = re.compile(rf"{re.escape(API_BASE_URL)}/afval-kalender/gemeente/71016/straten/search.*")
+GENK = City(nis_code="71016", name="Genk")
+
+
+async def test_find_street_prefers_exact_match_over_first_result() -> None:
+    with aioresponses() as mocked:
+        mocked.get(
+            STREET_SEARCH,
+            payload=[
+                {"nummer": "1", "naam": "Kerkeweg"},
+                {"nummer": "2", "naam": "Kerkstraat"},
+            ],
+        )
+        async with aiohttp.ClientSession() as session:
+            street = await LimburgNetClient(session).find_street(GENK, "  kerkstraat ")
+
+    assert street == Street(id="2", name="Kerkstraat")
+
+
+async def test_find_street_accepts_single_prefix_result() -> None:
+    with aioresponses() as mocked:
+        mocked.get(STREET_SEARCH, payload=[{"nummer": "2", "naam": "Kerkstraat"}])
+        async with aiohttp.ClientSession() as session:
+            street = await LimburgNetClient(session).find_street(GENK, "Kerkstr")
+
+    assert street.name == "Kerkstraat"
+
+
+async def test_find_street_ambiguous_prefix_lists_candidates() -> None:
+    with aioresponses() as mocked:
+        mocked.get(
+            STREET_SEARCH,
+            payload=[
+                {"nummer": "1", "naam": "Kerkeweg"},
+                {"nummer": "2", "naam": "Kerkstraat"},
+            ],
+        )
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(StreetNotFoundError) as exc_info:
+                await LimburgNetClient(session).find_street(GENK, "Kerk")
+
+    assert exc_info.value.candidates == ["Kerkeweg", "Kerkstraat"]
+
+
+async def test_find_city_ambiguous_prefix_lists_candidates() -> None:
+    with aioresponses() as mocked:
+        mocked.get(
+            CITY_SEARCH,
+            payload=[{"nisCode": "71020", "naam": "Halen"}, {"nisCode": "71072", "naam": "Hasselt"}],
+        )
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(CityNotFoundError) as exc_info:
+                await LimburgNetClient(session).find_city("Ha")
+
+    assert exc_info.value.candidates == ["Halen", "Hasselt"]
+
+
+async def test_blank_query_raises_not_found_without_request() -> None:
+    with aioresponses():  # any request would fail with a connection error
+        async with aiohttp.ClientSession() as session:
+            client = LimburgNetClient(session)
+            with pytest.raises(CityNotFoundError):
+                await client.find_city("   ")
+            with pytest.raises(StreetNotFoundError):
+                await client.find_street(GENK, "")
+
+
+async def test_timeout_is_wrapped() -> None:
+    with aioresponses() as mocked:
+        mocked.get(CITY_SEARCH, exception=TimeoutError())
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(LimburgNetConnectionError):
+                await LimburgNetClient(session).find_city("Genk")
+
+
+async def test_malformed_search_response_is_wrapped() -> None:
+    with aioresponses() as mocked:
+        mocked.get(CITY_SEARCH, payload=[{"unexpected": "shape"}])
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(LimburgNetConnectionError):
+                await LimburgNetClient(session).find_city("Genk")
+
+
+async def test_malformed_calendar_response_is_wrapped() -> None:
+    street = Street(id="12345", name="Stationsstraat")
+    with aioresponses() as mocked:
+        mocked.get(re.compile(rf"{re.escape(API_BASE_URL)}/kalender/.*"), payload=["not", "a", "dict"])
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(LimburgNetConnectionError):
+                await LimburgNetClient(session).get_upcoming_events(GENK, street, "12")
+
+
+async def test_get_upcoming_events_walks_months_from_given_date_across_year_end() -> None:
+    street = Street(id="12345", name="Stationsstraat")
+    with aioresponses() as mocked:
+        for month, day in (("2026-12", "2026-12-05"), ("2027-1", "2027-01-05"), ("2027-2", "2027-02-05")):
+            mocked.get(
+                re.compile(rf"{re.escape(API_BASE_URL)}/kalender/71016/{month}\?.*"),
+                payload={"events": [{"date": f"{day}T21:40:45+01:00", "title": "PMD"}]},
+            )
+        async with aiohttp.ClientSession() as session:
+            events = await LimburgNetClient(session).get_upcoming_events(
+                GENK, street, "12", from_date=date(2026, 12, 31)
+            )
+
+    assert [e.date for e in events] == [date(2026, 12, 5), date(2027, 1, 5), date(2027, 2, 5)]

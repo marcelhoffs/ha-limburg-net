@@ -13,12 +13,6 @@ DEFAULT_SCAN_INTERVAL_HOURS = 12
 MIN_SCAN_INTERVAL_HOURS = 1
 MAX_SCAN_INTERVAL_HOURS = 48
 
-# Number of calendar months (including the current one) to fetch on every
-# refresh. The upstream API only exposes data one month at a time.
-MONTHS_AHEAD = 3
-
-API_BASE_URL = "https://limburg.net/api-proxy/public"
-
 # Best-effort icon and translation_key for the waste types Limburg.net
 # returns. Matched by keyword rather than exact title, since the exact
 # wording of a waste type's title (e.g. "Glas" vs "Glas en flessen") can

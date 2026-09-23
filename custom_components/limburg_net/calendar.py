@@ -5,7 +5,7 @@ import datetime as dt
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -17,7 +17,7 @@ from .entity import device_info
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LimburgNetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Limburg.net calendar entity."""
     async_add_entities([LimburgNetCalendar(entry.runtime_data, entry)])
@@ -61,6 +61,12 @@ class LimburgNetCalendar(CoordinatorEntity[LimburgNetCoordinator], CalendarEntit
     async def async_get_events(
         self, hass: HomeAssistant, start_date: dt.datetime, end_date: dt.datetime
     ) -> list[CalendarEvent]:
-        start = dt_util.as_local(start_date).date()
-        end = dt_util.as_local(end_date).date()
-        return [event for event in self._events() if start <= event.start < end]
+        # Overlap test on local datetimes: an all-day event spans its whole
+        # day, so any window touching that day (e.g. 23:55-00:10) includes it.
+        start = dt_util.as_local(start_date)
+        end = dt_util.as_local(end_date)
+        return [
+            event
+            for event in self._events()
+            if event.start_datetime_local < end and event.end_datetime_local > start
+        ]

@@ -50,7 +50,8 @@ def _day_sensor(data, day_offset, translation_key="today", unique_suffix="today"
 # --- LimburgNetSensor -------------------------------------------------------
 
 
-def test_sensor_native_value_returns_earliest_date():
+def test_sensor_native_value_returns_earliest_date(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 20))
     coordinator = _FakeCoordinator({"PMD": [date(2026, 8, 20), date(2026, 8, 27)]})
     sensor = LimburgNetSensor(coordinator, _entry(), "PMD")
 
@@ -63,13 +64,23 @@ def test_sensor_native_value_none_when_no_dates():
     assert sensor.native_value is None
 
 
-def test_sensor_extra_state_attributes_lists_iso_dates():
+def test_sensor_extra_state_attributes_lists_iso_dates(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 20))
     coordinator = _FakeCoordinator({"PMD": [date(2026, 8, 20), date(2026, 8, 27)]})
     sensor = LimburgNetSensor(coordinator, _entry(), "PMD")
 
     assert sensor.extra_state_attributes == {
         "upcoming_dates": ["2026-08-20", "2026-08-27"]
     }
+
+
+def test_sensor_skips_dates_that_passed_since_last_refresh(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(dt_util, "now", lambda: datetime(2026, 8, 21))
+    coordinator = _FakeCoordinator({"PMD": [date(2026, 8, 20), date(2026, 8, 27)]})
+    sensor = LimburgNetSensor(coordinator, _entry(), "PMD")
+
+    assert sensor.native_value == date(2026, 8, 27)
+    assert sensor.extra_state_attributes == {"upcoming_dates": ["2026-08-27"]}
 
 
 def test_sensor_uses_translation_key_for_known_waste_type():
