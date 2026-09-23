@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiolimburgnet"
-version = "0.2.0"
+version = "0.2.1"
 description = "Async Python client for the public Limburg.net waste collection calendar API"
 readme = "README.md"
 license = "MIT"

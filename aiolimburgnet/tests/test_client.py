@@ -184,9 +184,13 @@ async def test_timeout_is_wrapped() -> None:
                 await LimburgNetClient(session).find_city("Genk")
 
 
-async def test_malformed_search_response_is_wrapped() -> None:
+@pytest.mark.parametrize(
+    "payload",
+    [[{"unexpected": "shape"}], [{"nisCode": "71016", "naam": None}], {"not": "a list"}],
+)
+async def test_malformed_search_response_is_wrapped(payload) -> None:
     with aioresponses() as mocked:
-        mocked.get(CITY_SEARCH, payload=[{"unexpected": "shape"}])
+        mocked.get(CITY_SEARCH, payload=payload)
         async with aiohttp.ClientSession() as session:
             with pytest.raises(LimburgNetConnectionError):
                 await LimburgNetClient(session).find_city("Genk")

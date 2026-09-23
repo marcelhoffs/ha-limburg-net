@@ -41,7 +41,7 @@ class LimburgNetClient:
             if match is None:
                 raise CityNotFoundError(query, [item["naam"] for item in data])
             return City(nis_code=str(match["nisCode"]), name=match["naam"])
-        except (KeyError, TypeError) as err:
+        except (AttributeError, KeyError, TypeError) as err:
             raise LimburgNetConnectionError(f"Unexpected city search response: {err!r}") from err
 
     async def find_street(self, city: City, query: str) -> Street:
@@ -55,7 +55,7 @@ class LimburgNetClient:
             if match is None:
                 raise StreetNotFoundError(query, [item["naam"] for item in data])
             return Street(id=str(match["nummer"]), name=match["naam"])
-        except (KeyError, TypeError) as err:
+        except (AttributeError, KeyError, TypeError) as err:
             raise LimburgNetConnectionError(f"Unexpected street search response: {err!r}") from err
 
     async def get_upcoming_events(

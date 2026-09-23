@@ -29,9 +29,12 @@ This repo contains two packages:
 - Two extra sensors, `Today` and `Tomorrow`, show which waste type(s) (if any)
   are collected on that day — handy for a "put the bins out" automation or
   dashboard card, without having to compare dates yourself. They roll over at
-  midnight. Their state is display text in your Home Assistant language, so in
-  automations test the `waste_types` attribute instead (e.g.
-  `{{ state_attr('sensor.x_tomorrow', 'waste_types') | length > 0 }}`).
+  midnight. Their state and `waste_types` attribute are display text in your
+  Home Assistant language, so in automations don't compare them to a name:
+  - anything collected tomorrow:
+    `{{ state_attr('sensor.x_tomorrow', 'waste_types') | length > 0 }}`
+  - a specific type tomorrow, via its date sensor:
+    `{{ is_state('sensor.x_pmd', (now() + timedelta(days=1)).strftime('%Y-%m-%d')) }}`
 - A calendar entity with every collection as an all-day event, usable with
   calendar triggers.
 - An Options flow lets you change the polling interval later, also from the UI.
