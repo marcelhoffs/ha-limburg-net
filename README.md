@@ -45,6 +45,10 @@ This repo contains two packages:
 
 ### HACS (recommended)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=marcelhoffs&repository=ha-limburg-net&category=integration)
+
+Or manually:
+
 1. In HACS, add this repository as a custom repository (category:
    Integration).
 2. Install "Limburg.net Afvalkalender".
